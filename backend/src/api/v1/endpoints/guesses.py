@@ -74,14 +74,15 @@ async def save_tournament_guesses(
     Bloqueia automaticamente se o primeiro jogo da Copa já tiver começado.
     """
     # 1. Validação do Prazo: Busca a data do primeiro jogo cadastrado no banco
-    query_first_match = select(Match).order_by(Match.match_date.asc())
-    result_match = await session.exec(query_first_match)
-    first_match = result_match.first()
+    query_second_match = select(Match).order_by(Match.match_date.asc()).offset(1)
+    result_match = await session.exec(query_second_match)
+    second_match = result_match.first()
 
-    if first_match and datetime.now(timezone.utc) >= first_match.match_date:
+    # Bloqueia se o horário atual for maior ou igual ao início do segundo jogo
+    if second_match and datetime.now(timezone.utc) >= second_match.match_date:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="O prazo para palpites de longo prazo já se encerrou porque a Copa começou!"
+            detail="O prazo encerrou! O segundo jogo da Copa já começou."
         )
 
     # 2. Busca se o usuário já tem um palpite de torneio registrado
@@ -138,3 +139,32 @@ async def get_my_tournament_guesses(
         )
 
     return guess
+
+@router.get("/matches")
+async def get_matches_with_my_guesses(
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
+    """Retorna todos os jogos e o palpite do usuário logado para cada um."""
+    # Busca todos os jogos ordenados pela data
+    matches = await session.exec(select(Match).order_by(Match.match_date.asc()))
+    
+    # Busca os palpites do usuário logado
+    my_guesses = await session.exec(select(MatchGuess).where(MatchGuess.user_id == current_user.id))
+    guesses_dict = {g.match_id: {"guess_a": g.guess_a, "guess_b": g.guess_b} for g in my_guesses.all()}
+    
+    # Monta a resposta unindo os dados
+    result = []
+    for match in matches.all():
+        result.append({
+            "id": match.id,
+            "team_a": match.team_a,
+            "team_b": match.team_b,
+            "match_date": match.match_date.isoformat(),
+            "status": match.status,
+            "score_a": match.score_a,
+            "score_b": match.score_b,
+            "my_guess": guesses_dict.get(match.id, None)
+        })
+        
+    return result

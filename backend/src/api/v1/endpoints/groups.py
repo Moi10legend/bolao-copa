@@ -118,3 +118,14 @@ async def get_group_ranking(
     ]
 
     return {"group_name": group.name, "ranking": ranking}
+
+@router.get("/me")
+async def get_my_groups(
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
+    """Retorna os grupos que o usuário logado participa."""
+    query = select(Group).join(GroupMember).where(GroupMember.user_id == current_user.id)
+    result = await session.exec(query)
+    groups = result.all()
+    return groups
