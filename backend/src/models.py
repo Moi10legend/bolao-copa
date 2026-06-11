@@ -42,4 +42,16 @@ class MatchGuess(SQLModel, table=True):
     user: User = Relationship(back_populates="match_guesses")
 
 class TournamentGuess(SQLModel, table=True):
-    id: int
+    id: int = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", unique=True)
+    champion: str
+    top_scorer: str  
+    top_assists: str 
+    best_defense: str
+    best_attack: str
+    brazil_stage: str 
+    points_earned: int = Field(default=0)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    
+    user: User = Relationship(back_populates="tournament_guesses")
