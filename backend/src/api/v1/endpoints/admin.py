@@ -27,12 +27,21 @@ async def sync_matches(session: AsyncSession = Depends(get_session)):
         response = await client.get(API_URL, headers=API_HEADERS)
         
         if response.status_code != 200:
-            return {"error": "Falha ao buscar dados da API externa"}
+            return {"error": f"Falha de rede. HTTP {response.status_code}", "detalhes": response.text}
             
         data = response.json()
+        
+        # 🕵️ A MÁGICA AQUI: Checando os erros escondidos da API-Sports
+        if data.get("errors"):
+            return {"error": "A API-Sports bloqueou a requisição!", "detalhes": data["errors"]}
+            
         fixtures = data.get("response", [])
         
+        if not fixtures:
+            return {"error": "A requisição deu certo, mas a lista de jogos veio vazia da API.", "data": data}
+            
         processed_games = 0
+        total_imported = 0 # Contador para sabermos quantos jogos foram pro banco
 
         for item in fixtures:
             fixture_id = item["fixture"]["id"]
@@ -42,7 +51,7 @@ async def sync_matches(session: AsyncSession = Depends(get_session)):
             result = await session.exec(query)
             existing_match = result.first()
             
-            # Formata a data (usando o padrão atualizado)
+            # Formata a data
             date_str = item["fixture"]["date"].replace("Z", "+00:00")
             match_date = datetime.fromisoformat(date_str).astimezone(timezone.utc)
             
@@ -64,10 +73,16 @@ async def sync_matches(session: AsyncSession = Depends(get_session)):
                 existing_match.score_b = item["goals"]["away"]
                 session.add(existing_match)
                 await session.commit()
+            
+            total_imported += 1 # Conta mais um jogo salvo/atualizado
 
-            # O GATILHO DO MOTOR: Se o jogo acabou de ser atualizado como "finished", calcula os pontos!
+            # O GATILHO DO MOTOR
             if status_api in ["ft", "aet", "pen", "finished"]:
                 await process_match_results(fixture_id, session)
                 processed_games += 1
                 
-        return {"message": f"Sincronização concluída. {processed_games} jogos finalizados tiveram seus pontos calculados."}
+        return {
+            "message": "Sincronização concluída com sucesso!",
+            "jogos_salvos_no_banco": total_imported,
+            "jogos_finalizados_calculados": processed_games
+        }
