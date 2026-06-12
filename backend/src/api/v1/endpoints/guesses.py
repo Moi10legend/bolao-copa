@@ -151,7 +151,11 @@ async def get_matches_with_my_guesses(
     
     # Busca os palpites do usuário logado
     my_guesses = await session.exec(select(MatchGuess).where(MatchGuess.user_id == current_user.id))
-    guesses_dict = {g.match_id: {"guess_a": g.guess_a, "guess_b": g.guess_b} for g in my_guesses.all()}
+    guesses_dict = {
+        g.match_id: 
+        {"guess_a": g.guess_a, 
+         "guess_b": g.guess_b,
+         "points_earned": g.points_earned} for g in my_guesses.all()}
     
     # Monta a resposta unindo os dados
     result = []
