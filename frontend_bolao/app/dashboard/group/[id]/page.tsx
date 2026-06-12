@@ -56,10 +56,8 @@ const countryCodes: Record<string, string> = {
   "Uzbequistão": "uz",
   "Panamá": "pa",
   "Gana": "gh"
-  // Conforme for adicionando mais países no banco, é só listar o código minúsculo dele aqui!
 };
 
-// Função auxiliar para gerar a URL da bandeira
 const getFlagUrl = (teamName: string) => {
   const code = countryCodes[teamName];
   return code ? `https://flagcdn.com/w40/${code}.png` : undefined;
@@ -75,22 +73,18 @@ export default function GroupPage() {
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Estados locais para controlar os inputs dos placares antes de salvar
   const [localGuesses, setLocalGuesses] = useState<Record<number, { a: string, b: string }>>({});
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Carrega o ranking do grupo
         const rankData = await fetchAPI(`/groups/${groupId}/ranking`);
         setRanking(rankData.ranking);
         setGroupName(rankData.group_name);
 
-        // Carrega a lista de jogos e os palpites do usuário
         const matchData = await fetchAPI('/guesses/matches');
         setMatches(matchData);
 
-        // Preenche os estados locais com os palpites já salvos no banco
         const initialGuesses: Record<number, { a: string, b: string }> = {};
         matchData.forEach((match: any) => {
           if (match.my_guess) {
@@ -179,21 +173,22 @@ export default function GroupPage() {
           </h2>
           
           {matches.map((match) => {
-            // Garante que o JS entenda que a data que veio do banco é UTC
             const safeDateStr = match.match_date.endsWith('Z') || match.match_date.includes('+') 
               ? match.match_date 
               : `${match.match_date}Z`;
               
             const matchDateObj = new Date(safeDateStr);
 
-            // Agora o bloqueio funciona perfeitamente sincronizado com a hora real
-            const isLocked = new Date() >= matchDateObj;
+            // 🏆 ATUALIZAÇÃO: Verifica se o status indica jogo encerrado no banco
+            const isMatchFinished = ["ft", "aet", "pen", "finished"].includes(match.status);
+
+            // Bloqueia se o tempo passou OU se o jogo já foi marcado como encerrado
+            const isLocked = (new Date() >= matchDateObj) || isMatchFinished;
             const guess = localGuesses[match.id] || { a: '', b: '' };
 
             return (
               <div key={match.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
                 <div className="text-center text-sm text-gray-500 mb-2">
-                  {/* Formata para a hora local do celular do usuário sem os segundos, para ficar mais limpo */}
                   {matchDateObj.toLocaleString('pt-BR', {
                     day: '2-digit', month: '2-digit', year: 'numeric',
                     hour: '2-digit', minute: '2-digit'
@@ -201,7 +196,7 @@ export default function GroupPage() {
                 </div>
                 
                 <div className="flex justify-between items-center gap-4">
-                  {/* Time A (Alinhado à Direita) */}
+                  {/* Time A */}
                   <div className="flex-1 flex items-center justify-end gap-2 font-bold text-gray-700 truncate">
                     <span>{match.team_a}</span>
                     {getFlagUrl(match.team_a) && (
@@ -234,7 +229,7 @@ export default function GroupPage() {
                     />
                   </div>
 
-                  {/* Time B (Alinhado à Esquerda) */}
+                  {/* Time B */}
                   <div className="flex-1 flex items-center justify-start gap-2 font-bold text-gray-700 truncate">
                     {getFlagUrl(match.team_b) && (
                       <img 
@@ -246,8 +241,9 @@ export default function GroupPage() {
                     <span>{match.team_b}</span>
                   </div>
                 </div>
-                {/* Botão Salvar ou Resultado Real */}
-                <div className="mt-4 text-center">
+
+                {/* 🔥 SEÇÃO ATUALIZADA: Botão Salvar ou Resultado Real + Badges de Pontuação */}
+                <div className="mt-4 flex flex-col items-center gap-2">
                   {!isLocked ? (
                     <button 
                       onClick={() => handleSaveGuess(match.id)}
@@ -256,13 +252,32 @@ export default function GroupPage() {
                       Salvar Palpite
                     </button>
                   ) : (
-                    <div className="text-sm bg-gray-100 py-1 rounded-full text-gray-600 font-medium inline-block px-4">
-                      {match.status === 'finished' 
-                        ? `Resultado Real: ${match.score_a} x ${match.score_b}` 
-                        : 'Jogo em andamento / Encerrado'}
+                    <div className="flex flex-col sm:flex-row items-center gap-2 justify-center w-full">
+                      {/* Badge do Placar Real */}
+                      <div className="text-sm bg-gray-100 py-1 rounded-full text-gray-600 font-medium inline-block px-4 border border-gray-200">
+                        {isMatchFinished 
+                          ? `Resultado Real: ${match.score_a} x ${match.score_b}` 
+                          : 'Jogo em andamento / Encerrado'}
+                      </div>
+                      
+                      {/* Badge Dinâmico de Pontos Conquistados */}
+                      {isMatchFinished && (
+                        <div className={`text-sm py-1 px-4 rounded-full font-bold border ${
+                          match.my_guess?.points_earned === 5 
+                            ? 'bg-yellow-100 text-yellow-700 border-yellow-300' // Cravou o placar
+                            : match.my_guess?.points_earned === 3 
+                            ? 'bg-blue-100 text-blue-700 border-blue-300'     // Acertou a tendência
+                            : 'bg-gray-100 text-gray-400 border-gray-200'       // Zerou
+                        }`}>
+                          {match.my_guess 
+                            ? `+${match.my_guess.points_earned} pts` 
+                            : 'Sem palpite'}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
+
               </div>
             );
           })}
