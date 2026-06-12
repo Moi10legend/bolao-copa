@@ -1,6 +1,7 @@
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 import jwt
+import os
 from datetime import datetime, timezone, timedelta
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -8,9 +9,12 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.db import get_session
 from sqlmodel import select
 from src.models import User
+from dotenv import load_dotenv
+
+load_dotenv()
 
 ALGORITHM = "HS256"
-SECRET_KEY = "chave-super-secreta-do-bolao"
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 ph = PasswordHasher()
 
@@ -36,9 +40,9 @@ def get_password_hash(password: str) -> str:
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
+        expire = datetime.now(timezone.utc).replace(tzinfo=None) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+        expire = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=15)
     
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)

@@ -62,7 +62,7 @@ async def process_match_results(match_id: int, session: AsyncSession):
         
         # Atualiza a pontuação no palpite
         guess.points_earned = pts
-        guess.updated_at = datetime.now(timezone.utc)  # Atualizado com a sua correção!
+        guess.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)  # Atualizado com a sua correção!
         session.add(guess)
         updated_count += 1
         

@@ -3,18 +3,22 @@ from fastapi import APIRouter, Depends
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from datetime import datetime, timezone
+import os
+from dotenv import load_dotenv
 
 from src.core.db import get_session
 from src.models import Match
 # Importando o motor que acabamos de criar
 from src.services.points_engine import process_match_results
 
+load_dotenv()
+
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 API_URL = "https://v3.football.api-sports.io/fixtures?league=1&season=2026"
 API_HEADERS = {
     "x-rapidapi-host": "v3.football.api-sports.io",
-    "x-rapidapi-key": "SUA_CHAVE_DA_API_AQUI"
+    "x-rapidapi-key": os.getenv("API_SPORTS_KEY")
 }
 
 @router.post("/sync-matches")

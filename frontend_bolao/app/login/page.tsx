@@ -50,7 +50,7 @@ export default function LoginPage() {
 
       } else {
         // FASTAPI REGISTER: Aceita JSON padrão
-        await fetchAPI('/register', {
+        await fetchAPI('/users/register', {
           method: 'POST',
           body: JSON.stringify({ name, email, password }),
         });

@@ -7,7 +7,7 @@ from src.api.v1.endpoints.users import generate_group_code
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select, func
 
-router = APIRouter(prefix="/groups", tags=["Groups"])
+router = APIRouter()
 
 @router.post("/create")
 async def create_group(

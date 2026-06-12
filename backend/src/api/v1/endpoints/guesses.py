@@ -8,7 +8,7 @@ from src.models import User, Match, MatchGuess, TournamentGuess
 from src.schemas import TournamentGuessUpdate
 # Importe os modelos Match, MatchGuess, User, get_current_user e get_session
 
-router = APIRouter(prefix="/guesses", tags=["Guesses"])
+router = APIRouter()
 
 @router.post("/match")
 async def place_match_guess(
@@ -28,7 +28,7 @@ async def place_match_guess(
         
     # 2. Bloqueia palpite se o jogo já começou ou terminou
     # Usando datetime.utcnow() para bater com o padrão UTC das APIs
-    if match.match_date <= datetime.now(timezone.utc):
+    if match.match_date <= datetime.now(timezone.utc).replace(tzinfo=None):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, 
             detail="As apostas para este jogo já foram encerradas!"
@@ -46,7 +46,7 @@ async def place_match_guess(
         # Atualiza o palpite existente
         existing_guess.guess_a = guess_a
         existing_guess.guess_b = guess_b
-        existing_guess.updated_at = datetime.now(timezone.utc)
+        existing_guess.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         session.add(existing_guess)
         message = "Palpite atualizado com sucesso!"
     else:
@@ -74,12 +74,12 @@ async def save_tournament_guesses(
     Bloqueia automaticamente se o primeiro jogo da Copa já tiver começado.
     """
     # 1. Validação do Prazo: Busca a data do primeiro jogo cadastrado no banco
-    query_second_match = select(Match).order_by(Match.match_date.asc()).offset(1)
-    result_match = await session.exec(query_second_match)
-    second_match = result_match.first()
+    query_dead_line = select(Match).order_by(Match.match_date.asc()).offset(24)
+    result_match = await session.exec(query_dead_line)
+    deadline_match = result_match.first()
 
     # Bloqueia se o horário atual for maior ou igual ao início do segundo jogo
-    if second_match and datetime.now(timezone.utc) >= second_match.match_date:
+    if deadline_match and datetime.now(timezone.utc).replace(tzinfo=None) >= deadline_match.match_date:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="O prazo encerrou! O segundo jogo da Copa já começou."
@@ -98,7 +98,7 @@ async def save_tournament_guesses(
         existing_guess.best_defense = guess_in.best_defense
         existing_guess.best_attack = guess_in.best_attack
         existing_guess.brazil_stage = guess_in.brazil_stage
-        existing_guess.updated_at = datetime.now(timezone.utc)
+        existing_guess.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         
         session.add(existing_guess)
         message = "Palpites do torneio atualizados com sucesso!"

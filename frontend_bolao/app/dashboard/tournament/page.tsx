@@ -101,21 +101,41 @@ export default function TournamentGuessesPage() {
             {/* Campeão */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Seleção Campeã</label>
-              <input type="text" name="champion" required placeholder="Ex: Brasil" value={formData.champion} onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+              <input 
+                type="text" 
+                name="champion" 
+                list="selecoes" /* A MÁGICA AQUI: Conecta com o datalist */
+                required 
+                placeholder="Comece a digitar..." 
+                value={formData.champion} 
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white" 
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               {/* Melhor Ataque */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Melhor Ataque</label>
-                <input type="text" name="best_attack" required placeholder="Ex: França" value={formData.best_attack} onChange={handleChange}
+                <input 
+                  type="text"
+                  name="best_attack" 
+                  list="selecoes"
+                  required placeholder="Ex: França" 
+                  value={formData.best_attack} 
+                  onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
               </div>
               {/* Melhor Defesa */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Melhor Defesa</label>
-                <input type="text" name="best_defense" required placeholder="Ex: Argentina" value={formData.best_defense} onChange={handleChange}
+                <input 
+                  type="text" 
+                  name="best_defense" 
+                  list="selecoes"
+                  required placeholder="Ex: Argentina" 
+                  value={formData.best_defense} 
+                  onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
               </div>
             </div>
@@ -124,13 +144,25 @@ export default function TournamentGuessesPage() {
               {/* Artilheiro */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Artilheiro (Jogador)</label>
-                <input type="text" name="top_scorer" required placeholder="Ex: Mbappé" value={formData.top_scorer} onChange={handleChange}
+                <input 
+                  type="text" 
+                  name="top_scorer" 
+                  list="jogadores"
+                  required placeholder="Ex: Mbappé" 
+                  value={formData.top_scorer} 
+                  onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
               </div>
               {/* Líder de Assistências */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Líder de Assistências</label>
-                <input type="text" name="top_assists" required placeholder="Ex: De Bruyne" value={formData.top_assists} onChange={handleChange}
+                <input 
+                  type="text" 
+                  name="top_assists" 
+                  list='jogadores'
+                  required placeholder="Ex: De Bruyne" 
+                  value={formData.top_assists} 
+                  onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
               </div>
             </div>
@@ -154,6 +186,47 @@ export default function TournamentGuessesPage() {
               {saving ? 'Salvando...' : 'Salvar Palpites Oficiais'}
             </button>
           </form>
+          {/* Listas de Autocomplete Nativas */}
+          <datalist id="selecoes">
+            <option value="Argentina" />
+            <option value="Brasil" />
+            <option value="França" />
+            <option value="Inglaterra" />
+            <option value="Espanha" />
+            <option value="Alemanha" />
+            <option value="Portugal" />
+            <option value="Holanda" />
+            <option value="Itália" />
+            <option value="Bélgica" />
+            <option value="Uruguai" />
+            <option value="Colômbia" />
+            {/* Você pode adicionar as outras seleções depois */}
+          </datalist>
+
+          <datalist id="jogadores">
+            <option value="Kylian Mbappé (FRA)" />
+            <option value="Vinícius Júnior (BRA)" />
+            <option value="Jude Bellingham (ING)" />
+            <option value="Harry Kane (ING)" />
+            <option value="Lionel Messi (ARG)" />
+            <option value="Kevin De Bruyne (BEL)" />
+            <option value="Désiré Doué (FRA)" />
+            <option value="Erling Haaland (NOR)" />
+            <option value="Cristiano Ronaldo (POR)" />
+            <option value="Bukayo Saka (ING)" />
+            <option value="Endrick (BRA)" />
+            <option value="Raphinha (BRA)" />
+            <option value="Neymar (BRA)" />
+            <option value="Bruno Guimarães (BRA)" />
+            <option value="Igor Thiago (BRA)" />
+            <option value="Bruno Fernandes (POR)" />
+            <option value="Nuno Mendes (POR)" />
+            <option value="Vitinha (POR)" />
+            <option value="Michael Olise (FRA)" />
+            <option value="Nico Williams (ESP)" />
+            <option value="Lamine Yamal (ESP)" />
+            {/* Adicione os favoritos aqui */}
+          </datalist>
         </div>
       </main>
     </div>
