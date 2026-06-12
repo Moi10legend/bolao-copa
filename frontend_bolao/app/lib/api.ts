@@ -1,5 +1,5 @@
 // src/lib/api.ts
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE_URL = "https://bolao-copa-api-90t0.onrender.com"//process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 
 
