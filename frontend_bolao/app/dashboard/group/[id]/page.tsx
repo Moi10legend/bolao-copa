@@ -4,6 +4,34 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { fetchAPI } from '../../../lib/api';
 
+// Mapeamento dos nomes que você insere no banco para os códigos da FlagCDN
+const countryCodes: Record<string, string> = {
+  "Brasil": "br",
+  "Espanha": "es",
+  "Croácia": "hr",
+  "México": "mx",
+  "Polônia": "pl",
+  "Suíça": "ch",
+  "Argentina": "ar",
+  "Arábia Saudita": "sa",
+  "França": "fr",
+  "Inglaterra": "gb",
+  "Alemanha": "de",
+  "Portugal": "pt",
+  "Holanda": "nl",
+  "Itália": "it",
+  "Bélgica": "be",
+  "Uruguai": "uy",
+  "Colômbia": "co"
+  // Conforme for adicionando mais países no banco, é só listar o código minúsculo dele aqui!
+};
+
+// Função auxiliar para gerar a URL da bandeira
+const getFlagUrl = (teamName: string) => {
+  const code = countryCodes[teamName];
+  return code ? `https://flagcdn.com/w40/${code}.png` : undefined;
+};
+
 export default function GroupPage() {
   const params = useParams();
   const router = useRouter();
@@ -118,19 +146,39 @@ export default function GroupPage() {
           </h2>
           
           {matches.map((match) => {
-            // Verifica se o jogo já começou (bloqueia edição)
-            const isLocked = new Date() >= new Date(match.match_date);
+            // Garante que o JS entenda que a data que veio do banco é UTC
+            const safeDateStr = match.match_date.endsWith('Z') || match.match_date.includes('+') 
+              ? match.match_date 
+              : `${match.match_date}Z`;
+              
+            const matchDateObj = new Date(safeDateStr);
+
+            // Agora o bloqueio funciona perfeitamente sincronizado com a hora real
+            const isLocked = new Date() >= matchDateObj;
             const guess = localGuesses[match.id] || { a: '', b: '' };
 
             return (
               <div key={match.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
                 <div className="text-center text-sm text-gray-500 mb-2">
-                  {new Date(match.match_date).toLocaleString('pt-BR')}
+                  {/* Formata para a hora local do celular do usuário sem os segundos, para ficar mais limpo */}
+                  {matchDateObj.toLocaleString('pt-BR', {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                  })}
                 </div>
                 
                 <div className="flex justify-between items-center gap-4">
-                  {/* Time A */}
-                  <div className="flex-1 text-right font-bold text-gray-700 truncate">{match.team_a}</div>
+                  {/* Time A (Alinhado à Direita) */}
+                  <div className="flex-1 flex items-center justify-end gap-2 font-bold text-gray-700 truncate">
+                    <span>{match.team_a}</span>
+                    {getFlagUrl(match.team_a) && (
+                      <img 
+                        src={getFlagUrl(match.team_a)} 
+                        alt={match.team_a} 
+                        className="w-6 h-4 object-cover rounded shadow-sm border border-gray-100 flex-shrink-0" 
+                      />
+                    )}
+                  </div>
                   
                   {/* Placar / Inputs */}
                   <div className="flex items-center gap-2">
@@ -153,10 +201,18 @@ export default function GroupPage() {
                     />
                   </div>
 
-                  {/* Time B */}
-                  <div className="flex-1 text-left font-bold text-gray-700 truncate">{match.team_b}</div>
+                  {/* Time B (Alinhado à Esquerda) */}
+                  <div className="flex-1 flex items-center justify-start gap-2 font-bold text-gray-700 truncate">
+                    {getFlagUrl(match.team_b) && (
+                      <img 
+                        src={getFlagUrl(match.team_b)} 
+                        alt={match.team_b} 
+                        className="w-6 h-4 object-cover rounded shadow-sm border border-gray-100 flex-shrink-0" 
+                      />
+                    )}
+                    <span>{match.team_b}</span>
+                  </div>
                 </div>
-
                 {/* Botão Salvar ou Resultado Real */}
                 <div className="mt-4 text-center">
                   {!isLocked ? (
