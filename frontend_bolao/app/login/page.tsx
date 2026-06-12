@@ -27,7 +27,7 @@ export default function LoginPage() {
         formData.append('username', email); // FastAPI usa 'username' para o campo de email
         formData.append('password', password);
 
-        const response = await fetch('http://localhost:8000/login', {
+        const response = await fetchAPI('/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
