@@ -1,6 +1,6 @@
 import httpx
 from fastapi import APIRouter, Depends
-from sqlmodel import select
+from sqlmodel import select, SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 from datetime import datetime, timezone
 import os
@@ -86,3 +86,35 @@ async def sync_matches(session: AsyncSession = Depends(get_session)):
             "jogos_salvos_no_banco": total_imported,
             "jogos_finalizados_calculados": processed_games
         }
+    
+
+
+class MatchResultInput(SQLModel):
+    score_a: int
+    score_b: int
+
+@router.put("/update-match/{match_id}")
+async def update_match_and_calc_points(
+    match_id: int, 
+    result: MatchResultInput, 
+    session: AsyncSession = Depends(get_session)
+):
+    # 1. Busca o jogo no banco
+    query = select(Match).where(Match.id == match_id)
+    db_result = await session.exec(query)
+    match = db_result.first()
+    
+    if not match:
+        return {"error": "Jogo não encontrado!"}
+        
+    # 2. Atualiza o placar e o status para finalizado
+    match.score_a = result.score_a
+    match.score_b = result.score_b
+    match.status = "ft"
+    session.add(match)
+    await session.commit()
+    
+    # 3. RODA O MOTOR DE PONTOS!
+    await process_match_results(match_id, session)
+    
+    return {"message": f"Jogo {match_id} atualizado e pontos calculados com sucesso!"}
