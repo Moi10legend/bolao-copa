@@ -15,7 +15,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -24,23 +24,17 @@ export default function LoginPage() {
       if (isLogin) {
         // FASTAPI LOGIN: Precisa ser x-www-form-urlencoded
         const formData = new URLSearchParams();
-        formData.append('username', email); // FastAPI usa 'username' para o campo de email
+        formData.append('username', email);
         formData.append('password', password);
 
-        const response = await fetchAPI('/login', {
+        // Como o fetchAPI já retorna o JSON, salvamos direto na variável 'data'
+        const data = await fetchAPI('/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
           },
           body: formData.toString(),
         });
-
-        if (!response.ok) {
-          const errData = await response.json();
-          throw new Error(errData.detail || 'Erro ao fazer login');
-        }
-
-        const data = await response.json();
         
         // Salva o token no navegador
         localStorage.setItem('bolao_token', data.access_token);
@@ -59,8 +53,9 @@ export default function LoginPage() {
         setIsLogin(true);
         alert('Conta criada com sucesso! Faça login para continuar.');
       }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Erro inesperado');
+    } catch (err: any) {
+      // O fetchAPI já lança o erro com a mensagem certinha da API!
+      setError(err.message || 'Erro inesperado');
     } finally {
       setLoading(false);
     }
