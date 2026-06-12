@@ -41,7 +41,10 @@ async def process_match_results(match_id: int, session: AsyncSession):
     result_match = await session.exec(query_match)
     match = result_match.first()
 
-    if not match or match.status != "finished" or match.score_a is None or match.score_b is None:
+    # 🏆 CORREÇÃO AQUI: Lista de status válidos para jogos encerrados
+    CLOSED_STATUSES = ["ft", "aet", "pen", "finished"]
+
+    if not match or match.status not in CLOSED_STATUSES or match.score_a is None or match.score_b is None:
         return {"status": "ignored", "message": "Jogo não finalizado ou sem placar."}
 
     # Busca todos os palpites feitos para este jogo específico
@@ -62,7 +65,7 @@ async def process_match_results(match_id: int, session: AsyncSession):
         
         # Atualiza a pontuação no palpite
         guess.points_earned = pts
-        guess.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)  # Atualizado com a sua correção!
+        guess.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         session.add(guess)
         updated_count += 1
         
