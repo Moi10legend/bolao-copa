@@ -87,7 +87,7 @@ export default function TournamentGuessesPage() {
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-800">Suas Apostas Finais</h2>
             <p className="text-sm text-gray-500 mt-1">
-              Preencha quem vai se destacar na Copa. <strong className="text-red-500">Atenção:</strong> Estas opções serão bloqueadas assim que o segundo jogo do torneio começar!
+              Preencha quem vai se destacar na Copa. <strong className="text-red-500">Atenção:</strong> Estas opções serão bloqueadas assim que a primeira rodada da fase de grupos acabar!
             </p>
           </div>
 
