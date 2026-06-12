@@ -1,6 +1,8 @@
 // src/lib/api.ts
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+console.log("URL da API carregada:", API_BASE_URL);
+
 export async function fetchAPI(endpoint: string, options: RequestInit = {}) {
   // Puxa o token do localStorage se estivermos rodando no cliente
   let token = "";

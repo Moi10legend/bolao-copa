@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { fetchAPI } from '../lib/api'; // Ajustado para a sua estrutura!
 
@@ -15,7 +15,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -59,8 +59,8 @@ export default function LoginPage() {
         setIsLogin(true);
         alert('Conta criada com sucesso! Faça login para continuar.');
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro inesperado');
     } finally {
       setLoading(false);
     }
